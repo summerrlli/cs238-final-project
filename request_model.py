@@ -66,11 +66,15 @@ def predict_belief(b, T, steps=1):
     """
     if steps < 0:
         raise ValueError("steps must be >= 0")
+    check_transition_matrix(T)
     return check_belief(b) @ np.linalg.matrix_power(T, steps)
 
 
 def predict_belief_stepwise(b, T, steps=1):
     """Same result as predict_belief, applying b <- b @ T one step at a time."""
+    if steps < 0:
+        raise ValueError("steps must be >= 0")
+    check_transition_matrix(T)
     b = check_belief(b)
     for _ in range(steps):
         b = b @ T
@@ -91,6 +95,12 @@ class StatusReport:
     sample_time: int   # tau: when the query was sent
     receive_time: int  # tau + D: when the reply reaches the robot
 
+    def __post_init__(self):
+        if self.status not in (ACT, RED, INV):
+            raise ValueError(f"status must be ACT, RED or INV, got {self.status!r}")
+        if self.receive_time < self.sample_time:
+            raise ValueError("receive_time must be >= sample_time")
+
 
 def sample_delay(rng, delay_probs=DELAY_PROBS):
     """Draw a reply delay D (numpy raises ValueError if probs are invalid)."""
@@ -99,12 +109,21 @@ def sample_delay(rng, delay_probs=DELAY_PROBS):
 
 def prob_reply_within(k, delay_probs=DELAY_PROBS):
     """P(D <= k): chance a reply arrives within k steps (term in proposal Eq. 2)."""
+    probs = np.array(list(delay_probs.values()), dtype=float)
+    if (probs < 0).any() or not np.isclose(probs.sum(), 1.0) or min(delay_probs) < 0:
+        raise ValueError("delay_probs must be a distribution over delays >= 0")
     return sum(p for d, p in delay_probs.items() if d <= k)
 
 
-def send_query(z_tau, tau, rng, delay_probs=DELAY_PROBS):
-    """Report produced by a query sent at time tau when the true status is z_tau."""
-    return StatusReport(z_tau, tau, tau + sample_delay(rng, delay_probs))
+def send_query(z_tau, tau, rng, delay_probs=DELAY_PROBS, delay=None):
+    """Report produced by a query sent at time tau when the true status is z_tau.
+
+    If `delay` is given it is used instead of a random draw (used by the
+    simulator so that paired episodes see identical delays).
+    """
+    if delay is None:
+        delay = sample_delay(rng, delay_probs)
+    return StatusReport(z_tau, tau, tau + int(delay))
 
 
 def belief_from_report(report, t, T):
@@ -131,11 +150,11 @@ class QueryChannel:
         self.delay_probs = delay_probs
         self.pending = None
 
-    def send(self, z_tau, tau):
+    def send(self, z_tau, tau, delay=None):
         """Send a query at time tau; return its arrival time."""
         if self.pending is not None:
             raise RuntimeError("a query is already outstanding")
-        self.pending = send_query(z_tau, tau, self.rng, self.delay_probs)
+        self.pending = send_query(z_tau, tau, self.rng, self.delay_probs, delay)
         return self.pending.receive_time
 
     def receive(self, t):
