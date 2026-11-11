@@ -1,0 +1,60 @@
+{
+  "design": "paired; seeds 0-19; horizon 20; same scenarios for all policies",
+  "n_episodes_per_policy": 20,
+  "policies": {
+    "never_query": {
+      "total_reward_mean": -15.0,
+      "total_reward_sd": 64.8561,
+      "total_reward_min": -57.0,
+      "total_reward_max": 93.0,
+      "travel_steps_mean": 7.0,
+      "query_count_mean": 0.0,
+      "correct_delivery_rate": 0.25,
+      "incorrect_delivery_rate": 0.75,
+      "unnecessary_travel_after_invalid_mean": 0.8,
+      "outcome_counts": {
+        "delivered_correct_ED": 5,
+        "delivered_invalid": 3,
+        "wrong_destination": 12
+      }
+    },
+    "periodic_3": {
+      "total_reward_mean": 21.3,
+      "total_reward_sd": 68.0063,
+      "total_reward_min": -76.0,
+      "total_reward_max": 90.0,
+      "travel_steps_mean": 8.7,
+      "query_count_mean": 3.0,
+      "correct_delivery_rate": 0.5,
+      "incorrect_delivery_rate": 0.3,
+      "unnecessary_travel_after_invalid_mean": 0.5,
+      "outcome_counts": {
+        "delivered_correct_ALT": 7,
+        "delivered_correct_ED": 3,
+        "delivered_invalid": 3,
+        "returned_after_invalid": 3,
+        "timeout": 1,
+        "wrong_destination": 3
+      }
+    },
+    "info_age_3": {
+      "total_reward_mean": 20.2,
+      "total_reward_sd": 70.7825,
+      "total_reward_min": -74.0,
+      "total_reward_max": 91.0,
+      "travel_steps_mean": 8.7,
+      "query_count_mean": 1.55,
+      "correct_delivery_rate": 0.5,
+      "incorrect_delivery_rate": 0.35,
+      "unnecessary_travel_after_invalid_mean": 0.65,
+      "outcome_counts": {
+        "delivered_correct_ALT": 6,
+        "delivered_correct_ED": 4,
+        "delivered_invalid": 2,
+        "returned_after_invalid": 2,
+        "timeout": 1,
+        "wrong_destination": 5
+      }
+    }
+  }
+}
