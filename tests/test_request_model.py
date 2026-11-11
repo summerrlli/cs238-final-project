@@ -144,3 +144,30 @@ def test_only_one_outstanding_query():
     assert ch.receive(2) == rm.StatusReport(ACT, 0, 2)
     assert ch.receive(3) is None  # delivered only once
     ch.send(RED, tau=3)           # new query now allowed
+
+
+# ---- input validation added after code review ----
+def test_report_validation():
+    for bad in [(-1, 0, 0), (3, 0, 0), (ACT, 5, 3)]:
+        with pytest.raises(ValueError):
+            rm.StatusReport(*bad)
+
+
+def test_stepwise_rejects_negative_steps():
+    with pytest.raises(ValueError):
+        rm.predict_belief_stepwise([1, 0, 0], T_Z, -3)
+
+
+def test_prob_reply_within_rejects_bad_distribution():
+    with pytest.raises(ValueError):
+        rm.prob_reply_within(1, {0: 0.9, 1: 0.9})
+
+
+def test_predict_belief_rejects_bad_matrix():
+    with pytest.raises(ValueError):
+        rm.predict_belief([1, 0, 0], np.full((3, 3), 0.5), 1)
+
+
+def test_fixed_delay_overrides_sampling():
+    ch = rm.QueryChannel(rng=None)
+    assert ch.send(RED, tau=4, delay=3) == 7
